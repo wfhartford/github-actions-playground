@@ -36,13 +36,19 @@ jobs:
             echo "Using provided tag: $DEPLOY_TAG"
           fi
           echo "DEPLOY_TAG=$DEPLOY_TAG" >> $GITHUB_OUTPUT
+          echo "EXISTING_TAG=$(<deployment/${{ inputs.destination }}-deployment.txt)" >> $GITHUB_OUTPUT
       - name: Deploy
+        if: steps.determine-deploy-tag.outputs.DEPLOY_TAG != steps.determine-deploy-tag.outputs.EXISTING_TAG
+        id: deploy
         run: |
           echo "Deploying ${{ steps.determine-deploy-tag.outputs.DEPLOY_TAG }} to ${{ inputs.destination }} in ${{ vars.REGION }}..."
       - name: Update staging deployment file
+        if: steps.deploy.outcome == 'success'
+        id: update-deployment-file
         run: |
           echo "${{ steps.determine-deploy-tag.outputs.DEPLOY_TAG }}" > deployment/${{ inputs.destination }}-deployment.txt
       - name: Commit and push
+        if: steps.deploy.outcome == 'success'
         uses: actions4git/add-commit-push@v1
         with:
           commit-message: "Update ${{ inputs.destination }} deploy tag\n[skip actions]"
