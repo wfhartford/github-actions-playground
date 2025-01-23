@@ -38,7 +38,7 @@ jobs:
           echo "DEPLOY_TAG=$DEPLOY_TAG" >> $GITHUB_OUTPUT
       - name: Deploy
         run: |
-          echo "Deploying ${{ steps.determine-deploy-tag.outputs.DEPLOY_TAG }} to ${{ inputs.destination }} in ${{ env.REGION }}..."
+          echo "Deploying ${{ steps.determine-deploy-tag.outputs.DEPLOY_TAG }} to ${{ inputs.destination }} in ${{ vars.REGION }}..."
       - name: Update staging deployment file
         run: |
           echo "${{ steps.determine-deploy-tag.outputs.DEPLOY_TAG }}" > deployment/${{ inputs.destination }}-deployment.txt
