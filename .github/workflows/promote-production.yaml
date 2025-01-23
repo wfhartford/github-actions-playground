@@ -1,4 +1,4 @@
-name: Promote to Production
+name: Promote staging to production
 
 on:
   workflow_dispatch:
@@ -9,7 +9,7 @@ on:
         required: false
 
 jobs:
-  deploy-staging:
+  promote:
     permissions:
       contents: write
     uses: ./.github/workflows/_promote.yaml

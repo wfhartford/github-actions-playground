@@ -17,10 +17,11 @@ on:
         required: true
 
 jobs:
-  deploy-staging:
+  promote:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+    environment: ${{ inputs.destination }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -37,7 +38,7 @@ jobs:
           echo "DEPLOY_TAG=$DEPLOY_TAG" >> $GITHUB_OUTPUT
       - name: Deploy
         run: |
-          echo "Deploying ${{ steps.determine-deploy-tag.outputs.DEPLOY_TAG }} to ${{ inputs.destination }}..."
+          echo "Deploying ${{ steps.determine-deploy-tag.outputs.DEPLOY_TAG }} to ${{ inputs.destination }} in ${{ env.REGION }}..."
       - name: Update staging deployment file
         run: |
           echo "${{ steps.determine-deploy-tag.outputs.DEPLOY_TAG }}" > deployment/${{ inputs.destination }}-deployment.txt
