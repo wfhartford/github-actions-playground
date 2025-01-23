@@ -3,38 +3,15 @@ name: Deploy to Staging
 on:
   workflow_dispatch:
     inputs:
-      sha:
+      tag:
         type: string
-        description: "The tag to deploy, or leave blank to use the latest test deployment"
+        description: "The tag to deploy, or leave blank to use the latest source deployment"
+        required: false
 
 jobs:
   deploy-staging:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-      - name: Determine deploy sha
-        id: determine-deploy-sha
-        run: |
-          INPUT_SHA=${{ inputs.sha }}
-          if [ -z "$INPUT_SHA" ]; then
-            TEST_SHA=$(<deployment/test-deployment.txt)
-            echo "No SHA provided, using test deployed SHA $TEST_SHA"
-            DEPLOY_SHA=$TEST_SHA
-          else
-            echo "Using provided SHA: $INPUT_SHA"
-            DEPLOY_SHA=$INPUT_SHA
-          fi
-          echo "DEPLOY_SHA=$DEPLOY_SHA" >> $GITHUB_OUTPUT
-      - name: Deploy
-        run: |
-          echo "Deploying ${{ steps.determine-deploy-sha.outputs.DEPLOY_SHA }}..."
-      - name: Update staging deployment file
-        run: |
-          echo "${{ steps.determine-deploy-sha.outputs.DEPLOY_SHA }}" > deployment/staging-deployment.txt
-      - name: Commit and push
-        uses: actions4git/add-commit-push@v1
-        with:
-          commit-message: "Update staging deploy sha\n[skip actions]"
+    uses: ./.github/workflows/_promote.yaml
+    with:
+      source-default: test
+      destination: staging
+      tag: ${{ inputs.tag }}

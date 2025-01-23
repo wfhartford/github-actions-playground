@@ -1,0 +1,47 @@
+name: Promote a deployment
+
+on:
+  workflow_call:
+    inputs:
+      tag:
+        type: string
+        description: "The tag to deploy, or leave blank to use the latest source deployment"
+        required: false
+      destination:
+        type: string
+        description: "The destination environment"
+        required: true
+      source-default:
+        type: string
+        description: "The source environment"
+        required: true
+
+jobs:
+  deploy-staging:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Determine deploy tag
+        id: determine-deploy-tag
+        run: |
+          DEPLOY_TAG=${{ inputs.tag }}
+          if [ -z "$DEPLOY_TAG" ]; then
+            DEPLOY_TAG=$(<deployment/${{ inputs.source-default }}-deployment.txt)
+            echo "No tag provided, using tag deployed to ${{ inputs.source-default }}: $DEPLOY_TAG"
+          else
+            echo "Using provided tag to ${{ inputs.source-default }}: $DEPLOY_TAG"
+          fi
+          echo "DEPLOY_TAG=$DEPLOY_TAG" >> $GITHUB_OUTPUT
+      - name: Deploy
+        run: |
+          echo "Deploying ${{ steps.determine-deploy-tag.outputs.DEPLOY_TAG }} to ${{ inputs.destination }}..."
+      - name: Update staging deployment file
+        run: |
+          echo "${{ steps.determine-deploy-tag.outputs.DEPLOY_TAG }}" > deployment/${{ inputs.destination }}-deployment.txt
+      - name: Commit and push
+        uses: actions4git/add-commit-push@v1
+        with:
+          commit-message: "Update ${{ inputs.destination }} deploy tag\n[skip actions]"
