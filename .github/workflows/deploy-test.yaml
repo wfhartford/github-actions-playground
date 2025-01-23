@@ -1,0 +1,29 @@
+name: Deploy to Test
+
+on:
+  workflow_run:
+    workflows:
+      - Build and Push
+    types:
+      - completed
+
+jobs:
+  deploy-test:
+    runs-on: ubuntu-latest
+    if: github.event.workflow_run.conclusion == 'success'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Deploy
+        run: |
+          echo "Deploying ${{ github.sha }}..."
+      - name: Update test deployment file
+        run: |
+          echo "# Automatically maintained by GitHub Actions" > deployment/test-deployment.txt
+          echo "${{ github.sha }}" >> deployment/test-deployment.txt
+      - name: Commit and push
+        uses: actions4git/add-commit-push@v1
+        with:
+          branch: main
+          commit-message: "Update test deploy sha\n[skip actions]"
+          files: deployment/test-deployment.txt
