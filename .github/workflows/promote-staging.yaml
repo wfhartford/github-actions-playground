@@ -1,4 +1,4 @@
-name: Deploy to Staging
+name: Promote to Staging
 
 on:
   workflow_dispatch:
