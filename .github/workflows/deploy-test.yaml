@@ -21,7 +21,7 @@ jobs:
           echo "Deploying ${{ github.sha }}..."
       - name: Update test deployment file
         run: |
-          echo "${{ github.sha }}" >> deployment/test-deployment.txt
+          echo "${{ github.sha }}" > deployment/test-deployment.txt
       - name: Commit and push
         uses: actions4git/add-commit-push@v1
         with:
