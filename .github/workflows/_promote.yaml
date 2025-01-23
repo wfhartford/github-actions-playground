@@ -42,7 +42,7 @@ jobs:
         id: deploy
         run: |
           echo "Deploying ${{ steps.determine-deploy-tag.outputs.DEPLOY_TAG }} to ${{ inputs.destination }} in ${{ vars.REGION }}..."
-      - name: Deployment skipped
+      - name: Status message
         if: steps.deploy.outcome == 'skipped'
         run: |
           echo "Deployment skipped because the target deployment tag matches the existing deployment tag."
