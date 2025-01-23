@@ -33,7 +33,7 @@ jobs:
             DEPLOY_TAG=$(<deployment/${{ inputs.source-default }}-deployment.txt)
             echo "No tag provided, using tag deployed to ${{ inputs.source-default }}: $DEPLOY_TAG"
           else
-            echo "Using provided tag to ${{ inputs.source-default }}: $DEPLOY_TAG"
+            echo "Using provided tag: $DEPLOY_TAG"
           fi
           echo "DEPLOY_TAG=$DEPLOY_TAG" >> $GITHUB_OUTPUT
       - name: Deploy

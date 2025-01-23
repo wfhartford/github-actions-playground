@@ -9,20 +9,11 @@ on:
 
 jobs:
   deploy-test:
-    runs-on: ubuntu-latest
-    if: github.event.workflow_run.conclusion == 'success'
     permissions:
       contents: write
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-      - name: Deploy
-        run: |
-          echo "Deploying ${{ github.sha }}..."
-      - name: Update test deployment file
-        run: |
-          echo "${{ github.sha }}" > deployment/test-deployment.txt
-      - name: Commit and push
-        uses: actions4git/add-commit-push@v1
-        with:
-          commit-message: "Update test deploy sha\n[skip actions]"
+    if: github.event.workflow_run.conclusion == 'success'
+    uses: ./.github/workflows/_promote.yaml
+    with:
+      source-default: none
+      destination: test
+      tag: ${{ github.sha }}
