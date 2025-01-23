@@ -26,6 +26,4 @@ jobs:
       - name: Commit and push
         uses: actions4git/add-commit-push@v1
         with:
-          branch: main
           commit-message: "Update test deploy sha\n[skip actions]"
-          files: deployment/test-deployment.txt

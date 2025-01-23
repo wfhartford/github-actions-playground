@@ -1,0 +1,39 @@
+name: Deploy to Staging
+
+on:
+  workflow_dispatch:
+    inputs:
+      sha:
+        type: string
+        description: "The SHA to deploy"
+
+jobs:
+  deploy-staging:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Determine deploy sha
+        run: |
+          INPUT_SHA=${{ inputs.sha }}
+          if [ -z "$INPUT_SHA" ]; then
+            TEST_SHA=$(grep -v "^#" deployment/test-deployment.txt)
+            echo "No SHA provided, using test deployed SHA $TEST_SHA"
+            export DEPLOY_SHA=$TEST_SHA
+          else
+            echo "Using provided SHA: $INPUT_SHA"
+            export DEPLOY_SHA=$INPUT_SHA
+          fi
+      - name: Deploy
+        run: |
+          echo "Deploying $DEPLOY_SHA..."
+      - name: Update staging deployment file
+        run: |
+          echo "# Automatically maintained by GitHub Actions" > deployment/test-deployment.txt
+          echo "$DEPLOY_SHA" >> deployment/staging-deployment.txt
+      - name: Commit and push
+        uses: actions4git/add-commit-push@v1
+        with:
+          commit-message: "Update staging deploy sha\n[skip actions]"
