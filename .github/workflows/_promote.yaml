@@ -17,16 +17,18 @@ on:
         required: true
 
 jobs:
-  promote:
+  prepare:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    environment: ${{ inputs.destination }}
+    outputs:
+      needed: ${{ steps.prepare.outputs.needed }}
+      deploy_tag: ${{ steps.prepare.outputs.deploy_tag }}
     steps:
+
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
+
       - name: Determine deploy tag
-        id: determine-deploy-tag
+        id: prepare
         run: |
           DEPLOY_TAG=${{ inputs.tag }}
           if [ -z "$DEPLOY_TAG" ]; then
@@ -35,24 +37,43 @@ jobs:
           else
             echo "Using provided tag: $DEPLOY_TAG"
           fi
-          echo "DEPLOY_TAG=$DEPLOY_TAG" >> $GITHUB_OUTPUT
-          echo "EXISTING_TAG=$(<deployment/${{ inputs.destination }}-deployment.txt)" >> $GITHUB_OUTPUT
+          if [ "$DEPLOY_TAG" = "$(<deployment/${{ inputs.destination }}-deployment.txt)" ]; then
+            echo "Deployment is already using tag $DEPLOY_TAG"
+            echo "needed=false" >> $GITHUB_OUTPUT
+          else
+            echo "needed=true" >> $GITHUB_OUTPUT
+            echo "deploy_tag=$DEPLOY_TAG" >> $GITHUB_OUTPUT
+          fi
+
+# This job should deploy the container.
+  deploy:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.destination }}
+    needs: prepare
+    if: needs.prepare.outputs.needed == 'true'
+    steps:
+
       - name: Deploy
-        if: steps.determine-deploy-tag.outputs.DEPLOY_TAG != steps.determine-deploy-tag.outputs.EXISTING_TAG
         id: deploy
         run: |
-          echo "Deploying ${{ steps.determine-deploy-tag.outputs.DEPLOY_TAG }} to ${{ inputs.destination }} in ${{ vars.REGION }}..."
-      - name: Status message
-        if: steps.deploy.outcome == 'skipped'
-        run: |
-          echo "Deployment skipped because the target deployment tag matches the existing deployment tag."
+          echo "Deploying ${{ needs.prepare.outputs.deploy_tag }} to ${{ inputs.destination }} in ${{ vars.REGION }}..."
+
+  record-deployment:
+    runs-on: ubuntu-latest
+    needs:
+      - prepare
+      - deploy
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
       - name: Update staging deployment file
-        if: steps.deploy.outcome == 'success'
-        id: update-deployment-file
         run: |
-          echo "${{ steps.determine-deploy-tag.outputs.DEPLOY_TAG }}" > deployment/${{ inputs.destination }}-deployment.txt
+          echo "${{ needs.prepare.output.deploy_tag }}" > deployment/${{ inputs.destination }}-deployment.txt
+
       - name: Commit and push
-        if: steps.deploy.outcome == 'success'
         uses: actions4git/add-commit-push@v1
         with:
           commit-message: "Update ${{ inputs.destination }} deploy tag\n[skip actions]"

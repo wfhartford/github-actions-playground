@@ -5,12 +5,16 @@ on:
     branches:
       - main
 
+# This job should simply build and push the container image using the current git SHA as the image tag.
+# Successful completion of this workflow triggers the `deploy-test.yaml` workflow.
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
     steps:
+
       - name: Checkout code
         uses: actions/checkout@v2
+
       - name: Build and Push
         run: |
-          echo "Building and pushing ${{ github.sha}}..."
+          echo "Building and pushing ${{ github.sha }}..."
