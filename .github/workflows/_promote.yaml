@@ -71,7 +71,7 @@ jobs:
 
       - name: Update staging deployment file
         run: |
-          echo "${{ needs.prepare.output.deploy_tag }}" > deployment/${{ inputs.destination }}-deployment.txt
+          echo "${{ needs.prepare.outputs.deploy_tag }}" > deployment/${{ inputs.destination }}-deployment.txt
 
       - name: Commit and push
         uses: actions4git/add-commit-push@v1
